@@ -1,8 +1,10 @@
+import {LoginForm} from "./LoginForm.tsx";
+
 function App() {
   return (
     <>
       <div>
-        hi
+        <LoginForm/>
       </div>
     </>
   )
