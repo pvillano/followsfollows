@@ -1,4 +1,6 @@
 import {AtpAgent} from "@atproto/api";
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
 
 export const agent = new AtpAgent({
   // App View URL
@@ -7,6 +9,12 @@ export const agent = new AtpAgent({
   // use the PDS URL here instead - the main one is bsky.social
   // service: "https://bsky.social",
 });
+
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
 
 export function devlog(...data: unknown[]) {
   if(import.meta.env.DEV) {
