@@ -1,4 +1,4 @@
-import {type FormEventHandler, useCallback, useId, useRef, useState} from "react";
+import {type FormEventHandler, type MouseEventHandler, useCallback, useId, useRef, useState} from "react";
 import {agent, cn, devlog} from "./lib.ts";
 import {Button} from "./components/Button.tsx";
 import {type OutputSchema} from "@atproto/api/src/client/types/app/bsky/actor/searchActors.ts";
@@ -15,7 +15,8 @@ export function LoginForm({onFindFollowsFollows}: LoginFormProps) {
   const [yourProfile, setYourProfile] = useState<OutputSchema["actors"][0] | null>(null)
   const [error, setError] = useState("")
 
-  const onButtonClick = useCallback(() => {
+  const onButtonClick: MouseEventHandler<HTMLButtonElement> = useCallback((e) => {
+    e.preventDefault()
     if (!yourProfile) {
       setError("Please select a profile first.")
       return

@@ -27,13 +27,11 @@ function ProfileList({profiles}: {profiles: { actor: ProfileView, score: number 
 
 function App() {
 
-  const [unweighted, setUnweighted] = useState<Awaited<ReturnType<typeof followsFollows>>['unweighted']>([])
-  const [weighted, setWeighted] = useState<Awaited<ReturnType<typeof followsFollows>>['weighted']>([])
+  const [unweighted, setUnweighted] = useState<{actor: ProfileView, score: number}[]>([])
+  const [weighted, setWeighted] = useState<{actor: ProfileView, score: number}[]>([])
 
   const onFindFollowsFollows = async (profile: ProfileView) => {
-    const {unweighted, weighted} = await followsFollows(profile.did)
-    setUnweighted(unweighted)
-    setWeighted(weighted)
+    await followsFollows(profile.did, setWeighted, setUnweighted)
   }
 
   return (
@@ -43,11 +41,11 @@ function App() {
         <div className="flex flex-row gap-2">
           <div className="flex flex-col p-2 gap-2 border w-fit">
             <h2>Follows follows, weighted sort:</h2>
-            <ProfileList profiles={weighted}/>
+            <ProfileList profiles={weighted.slice(0, 10)}/>
           </div>
           <div className="flex flex-col p-2 gap-2 border w-fit">
             <h2>Follows follows, unweighted sort:</h2>
-            <ProfileList profiles={unweighted}/>
+            <ProfileList profiles={unweighted.slice(0, 10)}/>
           </div>
         </div>
       </div>
