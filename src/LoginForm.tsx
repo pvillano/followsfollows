@@ -1,8 +1,9 @@
 import {type FormEventHandler, type MouseEventHandler, useCallback, useId, useRef, useState} from "react";
-import {agent, cn, devlog} from "./lib.ts";
+import {agent, devlog} from "./lib.ts";
 import {Button} from "./components/Button.tsx";
 import {type OutputSchema} from "@atproto/api/src/client/types/app/bsky/actor/searchActors.ts";
 import type {ProfileView} from "@atproto/api/dist/client/types/app/bsky/actor/defs";
+import {Profile} from "./Profile.tsx";
 
 interface LoginFormProps {
   // setProfile: Dispatch<SetStateAction<ProfileView>>,
@@ -56,10 +57,10 @@ export function LoginForm({onFindFollowsFollows}: LoginFormProps) {
     </div>
     <div className="text-red-500">{error && `Error: ${error}`}</div>
     <div>
-      <ul>
+      {yourProfile ? <Profile actor={yourProfile} className="border-2"/> : <ul>
         {yourProfileChoices.map(profile => <li key={profile.did}>
           <button
-            className={cn("flex flex-row border m-2 p-2 gap-4 content-end", yourProfile?.did == profile.did && "border-2")}
+            className="flex flex-row border m-2 p-2 gap-4 content-end"
             onClick={() => {
               setYourProfile(profile)
             }}>
@@ -67,7 +68,7 @@ export function LoginForm({onFindFollowsFollows}: LoginFormProps) {
             <div>{profile.handle}</div>
           </button>
         </li>)}
-      </ul>
+      </ul>}
     </div>
   </form>
 }
