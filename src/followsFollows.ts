@@ -47,13 +47,13 @@ export async function followsFollows(actor: string) {
     }
   }
 
-  const unweighted = [...weightedFollowCount.entries()]
+  const unweighted = [...rawFollowCount.entries()]
     .sort(profileSortDescending)
     .map(e => ({
       actor: didToActor.get(e[0])!,
       score: e[1]
     }))
-  const weighted = [...rawFollowCount.entries()]
+  const weighted = [...weightedFollowCount.entries()]
     .sort(profileSortDescending)
     .map(e => ({
       actor: didToActor.get(e[0])!,
