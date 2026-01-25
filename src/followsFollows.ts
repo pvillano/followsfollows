@@ -9,15 +9,14 @@ type SetStateFunction = (newValue: {
   score: number
 }[]) => void
 
-/**
- *
- * @param actor decentralized identifier
- * @param updateWeighted
- * @param updateUnweighted
- */
-export async function followsFollows(actor: string, updateWeighted: SetStateFunction, updateUnweighted: SetStateFunction) {
+export async function followsFollows(
+  actor: string,
+  updateWeighted: SetStateFunction,
+  updateUnweighted: SetStateFunction,
+  setStatistics: (statistics: Map<string, string>) => void
+) {
 
-  const followsMap = new DefaultMap<string, ProfileView[]>(() => [])
+  const followsMap = new DefaultMap<string, string[]>(() => [])
   const profileMap = new Map<string, ProfileView>()
   let lastUpdate = -2000;
 
@@ -39,11 +38,11 @@ export async function followsFollows(actor: string, updateWeighted: SetStateFunc
       throw new Error("Failed to fetch your follows follows")
     }
     if (follows.length > 0) {
-      followsMap.get(actor).push(...follows)
+      followsMap.get(actor).push(...follows.map(e => e.did))
     }
     follows.forEach(e => profileMap.set(e.did, e))
 
-    if (performance.now() - lastUpdate > 100) {
+    if (performance.now() - lastUpdate > 100 || workQueue.length == 0) {
       let totalFollows = 0;
       for (const v of followsMap.values()) {
         totalFollows += v.length
@@ -55,8 +54,8 @@ export async function followsFollows(actor: string, updateWeighted: SetStateFunc
       for (const [, follows] of followsMap.entries()) {
         const multiplier = averageFollowsCount / follows.length
         for (const follow of follows) {
-          unWeightedFollowCount.set(follow.did, unWeightedFollowCount.get(follow.did) + 1)
-          weightedFollowCount.set(follow.did, weightedFollowCount.get(follow.did) + multiplier)
+          unWeightedFollowCount.set(follow, unWeightedFollowCount.get(follow) + 1)
+          weightedFollowCount.set(follow, weightedFollowCount.get(follow) + multiplier)
         }
       }
 
@@ -67,11 +66,18 @@ export async function followsFollows(actor: string, updateWeighted: SetStateFunc
           score: e[1]
         })))
       updateWeighted([...weightedFollowCount.entries()]
-      .sort(profileSortDescending)
-      .map(e => ({
-        actor: profileMap.get(e[0])!,
-        score: e[1]
-      })))
+        .sort(profileSortDescending)
+        .map(e => ({
+          actor: profileMap.get(e[0])!,
+          score: e[1]
+        })))
+      const formatter = new Intl.NumberFormat(undefined, {maximumFractionDigits: 2})
+      // devlog([...followsMap.entries()])
+      setStatistics(new Map([
+        ["Users Processed", `${(myfollowsResponse.data.follows.length - workQueue.length)}/${myfollowsResponse.data.follows.length}`],
+        ["Total Follows", `${totalFollows}`],
+        ["Average Follows per User", `${formatter.format(averageFollowsCount)}`]
+      ]))
       lastUpdate = performance.now()
     }
   }

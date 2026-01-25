@@ -31,11 +31,11 @@ export function LoginForm({onFindFollowsFollows}: LoginFormProps) {
     }
     try {
       const response = await agent.searchActors({q: handleInputRef.current.value})
-      //TODO: allow chosing the correct profile by avatar and handle
       if (!response.success) {
         setError("Error: Failed to fetch profiles.")
       }
       devlog({response})
+      setYourProfile(null)
       setYourProfileChoices(response.data.actors)
     } catch (e) {
       setError(`${e}`)
@@ -47,7 +47,7 @@ export function LoginForm({onFindFollowsFollows}: LoginFormProps) {
   return <form className="flex flex-col p-2 gap-2 border w-fit" onSubmit={onSearchProfiles}>
     <div className="flex flex-row gap-2">
       <div className="flex flex-col gap-2 w-fit">
-        <label className="w-fit" htmlFor={id + "-handle"}>Handle: </label>
+        <label className="w-fit" htmlFor={id + "-handle"}>Your Handle: </label>
         <input className="outline" id={id + "-handle"} type="text" ref={handleInputRef} placeholder="safety.bsky.app"/>
       </div>
     </div>
