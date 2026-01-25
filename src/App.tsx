@@ -2,18 +2,7 @@ import {LoginForm} from "./LoginForm.tsx";
 import type {ProfileView} from "@atproto/api/dist/client/types/app/bsky/actor/defs";
 import {followsFollows} from "./followsFollows.ts";
 import {useState} from "react";
-import {cn} from "./lib.ts";
-
-
-const formatter = new Intl.NumberFormat(undefined, {maximumFractionDigits: 2})
-
-function Profile({actor, score}: {actor: ProfileView, score?: number}) {
-  return <div
-    className={cn("flex flex-row border m-2 p-2 gap-4 content-end")}>
-    <img src={actor.avatar} className="w-10 h-10 rounded-full" alt="avatar"/>
-    <div>{actor.handle} {score !== undefined && `(${formatter.format(score)} points)`}</div>
-  </div>;
-}
+import {Profile} from "./Profile.tsx";
 
 function ProfileList({profiles}: {profiles: { actor: ProfileView, score: number }[]}) {
   return <ul>
