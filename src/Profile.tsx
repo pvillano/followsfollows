@@ -13,6 +13,9 @@ export function Profile({actor, score, className, ...props}: {
     {...props}
   >
     <img src={actor.avatar} className="w-10 h-10 rounded-full" alt="avatar"/>
-    <div>{actor.handle} {score !== undefined && `(${formatter.format(score)} points)`}</div>
+    <div>
+      <div>{actor.displayName} @{actor.handle}</div>
+      <div>{score !== undefined && `(${formatter.format(score)} points)`}</div>
+    </div>
   </div>;
 }

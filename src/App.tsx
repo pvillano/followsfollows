@@ -44,13 +44,13 @@ function App() {
             </ul>
           </div>
         </div>
-        <div className="flex flex-row gap-2">
+        <div className="flex flex-row gap-2 w-0 min-w-fit">
           <div className="flex flex-col p-2 gap-2 border w-fit">
-            <h2>Your follows' follows, weighted score:</h2>
+            <h2>Your follows' follows, by weighted score:</h2>
             <ProfileList profiles={weighted}/>
           </div>
           <div className="flex flex-col p-2 gap-2 border w-fit">
-            <h2>Your follows' follows, by follows:</h2>
+            <h2>Your follows' follows, by follow follows:</h2>
             <ProfileList profiles={unweighted}/>
           </div>
         </div>
