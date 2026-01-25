@@ -1,5 +1,7 @@
 import {agent} from "./lib.ts";
 import type {ProfileView} from "@atproto/api/dist/client/types/app/bsky/actor/defs";
+import {type Response as GetFollowsResponse} from "@atproto/api/src/client/types/app/bsky/graph/getFollows.ts";
+import {DefaultMap} from "./DefaultMap.ts";
 
 
 type SetStateFunction = (newValue: {
@@ -15,66 +17,75 @@ type SetStateFunction = (newValue: {
  */
 export async function followsFollows(actor: string, updateWeighted: SetStateFunction, updateUnweighted: SetStateFunction) {
 
-  const rawFollowCount: Map<string, number> = new Map()
-  const weightedFollowCount: Map<string, number> = new Map()
-  const didToActor: Map<string, ProfileView> = new Map()
+  const followsMap = new DefaultMap<string, ProfileView[]>(() => [])
+  const profileMap = new Map<string, ProfileView>()
   let lastUpdate = -2000;
 
-  const followersResponse = await getAllFollowers(actor)
-  if (!followersResponse.success) {
-    throw new Error("Failed to fetch your followers")
+  const myfollowsResponse = await getAllfollows(actor)
+  if (!myfollowsResponse.success) {
+    throw new Error("Failed to fetch your follows")
   }
-  let totalFollowerCount = 0
 
-  for (let i = 0; i < followersResponse.data.followers.length; i++) {
-    const follower = followersResponse.data.followers[i];
-    const followerFollowerResponse = await getAllFollowers(follower.did)
-    if (!followerFollowerResponse.success) {
+  const workQueue: { actor: string, work: Promise<GetFollowsResponse> }[] = myfollowsResponse.data.follows
+    .map(e => ({actor: e.did, work: agent.getFollows({actor: e.did})}))
+
+  while (workQueue.length > 0) {
+    const {actor, work} = workQueue.shift()!
+    const {data: {cursor, follows}, success} = await work
+    if (cursor) {
+      workQueue.push({actor, work: agent.getFollows({actor, cursor})})
+    }
+    if (!success) {
       throw new Error("Failed to fetch your follows follows")
     }
-    totalFollowerCount += followerFollowerResponse.data.followers.length
-    for (const followerFollower of followerFollowerResponse.data.followers) {
-      rawFollowCount.set(
-        followerFollower.did,
-        (rawFollowCount.get(followerFollower.did) || 0) + 1
-      )
-      weightedFollowCount.set(
-        followerFollower.did,
-        (weightedFollowCount.get(followerFollower.did) || 0) + 1 / followerFollowerResponse.data.followers.length
-      )
-      didToActor.set(followerFollower.did, followerFollower)
+    if (follows.length > 0) {
+      followsMap.get(actor).push(...follows)
     }
+    follows.forEach(e => profileMap.set(e.did, e))
 
-    if (performance.now() - lastUpdate > 1000 || i == followersResponse.data.followers.length - 1) {
-      const averageFollowerCount = totalFollowerCount / (i+1)
-      updateUnweighted([...rawFollowCount.entries()]
+    if (performance.now() - lastUpdate > 100) {
+      let totalFollows = 0;
+      for (const v of followsMap.values()) {
+        totalFollows += v.length
+      }
+      const averageFollowsCount = totalFollows / followsMap.size
+
+      const unWeightedFollowCount = new DefaultMap<string, number>(() => 0)
+      const weightedFollowCount = new DefaultMap<string, number>(() => 0)
+      for (const [, follows] of followsMap.entries()) {
+        const multiplier = averageFollowsCount / follows.length
+        for (const follow of follows) {
+          unWeightedFollowCount.set(follow.did, unWeightedFollowCount.get(follow.did) + 1)
+          weightedFollowCount.set(follow.did, weightedFollowCount.get(follow.did) + multiplier)
+        }
+      }
+
+      updateUnweighted([...unWeightedFollowCount.entries()]
         .sort(profileSortDescending)
         .map(e => ({
-          actor: didToActor.get(e[0])!,
+          actor: profileMap.get(e[0])!,
           score: e[1]
         })))
       updateWeighted([...weightedFollowCount.entries()]
-        .sort(profileSortDescending)
-        .map(e => ({
-          actor: didToActor.get(e[0])!,
-          score: e[1] * averageFollowerCount
-        })))
+      .sort(profileSortDescending)
+      .map(e => ({
+        actor: profileMap.get(e[0])!,
+        score: e[1]
+      })))
       lastUpdate = performance.now()
     }
   }
-
-
 }
 
-const getAllFollowers = async (actor: string) => {
-  const allFollowers: ProfileView[] = []
-  let {data: {cursor, followers}, success} = await agent.getFollowers({actor});
-  allFollowers.push(...followers)
+const getAllfollows = async (actor: string) => {
+  const allFollows: ProfileView[] = []
+  let {data: {cursor, follows}, success} = await agent.getFollows({actor});
+  allFollows.push(...follows)
   while (success && cursor) {
-    ({data: {cursor, followers}, success} = await agent.getFollowers({actor, cursor}));
-    allFollowers.push(...followers)
+    ({data: {cursor, follows}, success} = await agent.getFollows({actor, cursor}));
+    allFollows.push(...follows)
   }
-  return {data: {followers: allFollowers}, success}
+  return {data: {follows: allFollows}, success}
 }
 
 
