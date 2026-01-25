@@ -25,6 +25,9 @@ export async function followsFollows(
     throw new Error("Failed to fetch your follows")
   }
 
+  followsMap.set(actor, myfollowsResponse.data.follows.map(e => e.did))
+  myfollowsResponse.data.follows.forEach(e => profileMap.set(e.did, e))
+
   const workQueue: { actor: string, work: Promise<GetFollowsResponse> }[] = myfollowsResponse.data.follows
     .map(e => ({actor: e.did, work: agent.getFollows({actor: e.did})}))
 
