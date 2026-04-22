@@ -1,7 +1,6 @@
-import {agent} from "./lib.ts";
 import type {ProfileView} from "@atproto/api/dist/client/types/app/bsky/actor/defs";
-import {type Response as GetFollowsResponse} from "@atproto/api/src/client/types/app/bsky/graph/getFollows.ts";
 import {DefaultMap} from "./DefaultMap.ts";
+import {getFollows} from "./MiniAgent.ts";
 
 
 type SetStateFunction = (newValue: {
@@ -20,26 +19,28 @@ export async function followsFollows(
   const profileMap = new Map<string, ProfileView>()
   let lastUpdate = -2000;
 
-  const myfollowsResponse = await getAllfollows(actor)
-  if (!myfollowsResponse.success) {
+  const myFollowsResponse = await getAllFollows(actor)
+  if (!myFollowsResponse.success) {
     throw new Error("Failed to fetch your follows")
   }
 
-  followsMap.set(actor, myfollowsResponse.data.follows.map(e => e.did))
-  myfollowsResponse.data.follows.forEach(e => profileMap.set(e.did, e))
+  followsMap.set(actor, myFollowsResponse.data.follows.map(e => e.did))
+  myFollowsResponse.data.follows.forEach(e => profileMap.set(e.did, e))
 
-  const workQueue: { actor: string, work: Promise<GetFollowsResponse> }[] = myfollowsResponse.data.follows
-    .map(e => ({actor: e.did, work: agent.getFollows({actor: e.did})}))
+  const workQueue: { actor: string, work: ReturnType<typeof getFollows> }[] = myFollowsResponse.data.follows
+    .map(e => ({actor: e.did, work: getFollows(e.did)}))
 
   while (workQueue.length > 0) {
     const {actor, work} = workQueue.shift()!
-    const {data: {cursor, follows}, success} = await work
-    if (cursor) {
-      workQueue.push({actor, work: agent.getFollows({actor, cursor})})
-    }
+    const {data, success} = await work
     if (!success) {
       throw new Error("Failed to fetch your follows follows")
     }
+    const {cursor, follows} = data
+    if (cursor) {
+      workQueue.push({actor, work: getFollows(actor, cursor)})
+    }
+
     if (follows.length > 0) {
       followsMap.get(actor).push(...follows.map(e => e.did))
     }
@@ -77,7 +78,7 @@ export async function followsFollows(
       const formatter = new Intl.NumberFormat(undefined, {maximumFractionDigits: 2})
       // devlog([...followsMap.entries()])
       setStatistics(new Map([
-        ["Users Processed", `${(myfollowsResponse.data.follows.length - workQueue.length)}/${myfollowsResponse.data.follows.length}`],
+        ["Users Processed", `${(myFollowsResponse.data.follows.length - workQueue.length)}/${myFollowsResponse.data.follows.length}`],
         ["Total Follows", `${totalFollows}`],
         ["Average Follows per User", `${formatter.format(averageFollowsCount)}`]
       ]))
@@ -86,15 +87,24 @@ export async function followsFollows(
   }
 }
 
-const getAllfollows = async (actor: string) => {
+const getAllFollows = async (actor: string) => {
   const allFollows: ProfileView[] = []
-  let {data: {cursor, follows}, success} = await agent.getFollows({actor});
-  allFollows.push(...follows)
-  while (success && cursor) {
-    ({data: {cursor, follows}, success} = await agent.getFollows({actor, cursor}));
+
+  let follows;
+  let cursor = undefined
+  let shouldLoop = true;
+
+  do {
+    const {data, success} = await getFollows(actor, cursor);
+    if (!success) {
+      return {data, success}
+    }
+    ({cursor, follows} = data as (Awaited<ReturnType<typeof getFollows>> & {success: true})['data'])
     allFollows.push(...follows)
-  }
-  return {data: {follows: allFollows}, success}
+    shouldLoop = !!(success && cursor)
+  } while (shouldLoop)
+
+  return {data: {follows: allFollows}, success: true}
 }
 
 

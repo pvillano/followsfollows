@@ -1,9 +1,10 @@
 import {type FormEventHandler, type MouseEventHandler, useCallback, useId, useRef, useState} from "react";
-import {agent, devlog} from "./lib.ts";
+import {devlog} from "./lib.ts";
 import {Button} from "./components/Button.tsx";
 import {type OutputSchema} from "@atproto/api/src/client/types/app/bsky/actor/searchActors.ts";
 import type {ProfileView} from "@atproto/api/dist/client/types/app/bsky/actor/defs";
 import {Profile} from "./Profile.tsx";
+import {searchActors} from "./MiniAgent.ts";
 
 interface LoginFormProps {
   // setProfile: Dispatch<SetStateAction<ProfileView>>,
@@ -30,18 +31,19 @@ export function LoginForm({onFindFollowsFollows}: LoginFormProps) {
       return
     }
     try {
-      const response = await agent.searchActors({q: handleInputRef.current.value})
-      if (!response.success) {
-        setError("Error: Failed to fetch profiles.")
-      }
+      const response = await searchActors(handleInputRef.current.value)
       devlog({response})
+      if (!response.success) {
+        setError(response.data.message)
+        return
+      }
       setYourProfile(null)
       setYourProfileChoices(response.data.actors)
+      setError("")
     } catch (e) {
       setError(`${e}`)
       return
     }
-    setError("")
   }
 
   return <form className="flex flex-col p-2 gap-2 border w-fit" onSubmit={onSearchProfiles}>
