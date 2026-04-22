@@ -11,16 +11,16 @@ interface ErrorSchema {
 
 export async function searchActors(q: string) {
   const response = await fetch(`https://api.bsky.app/xrpc/app.bsky.actor.searchActors?q=${q}`)
-  const data = await response.json()
+  const data = await response.json() as ErrorSchema | SearchActorsOutputSchema
   if("error" in data){
     return {
       success: false as const,
-      data: data as ErrorSchema
+      data
     }
   }
   return {
     success: true as const,
-    data: data as SearchActorsOutputSchema
+    data
   }
 }
 
@@ -30,14 +30,14 @@ export async function getFollows(actor: string, cursor?: string) {
     uri += `&cursor=${encodeURIComponent(cursor)}`
   }
   const response = await fetch(uri);
-  const data = await response.json()
+  const data = await response.json() as ErrorSchema | GetFollowsOutputSchema
   if("error" in data){
     return {
       success: false as const,
-      data: data as ErrorSchema
+      data
     }
   }return {
     success: true as const,
-    data: data as GetFollowsOutputSchema
+    data
   }
 }
