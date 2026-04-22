@@ -8,7 +8,8 @@ import {searchActors} from "./MiniAgent.ts";
 
 interface LoginFormProps {
   // setProfile: Dispatch<SetStateAction<ProfileView>>,
-  onFindFollowsFollows: (profile: ProfileView) => void }
+  onFindFollowsFollows: (profile: ProfileView) => void
+}
 
 export function LoginForm({onFindFollowsFollows}: LoginFormProps) {
   const id = useId()
@@ -25,6 +26,7 @@ export function LoginForm({onFindFollowsFollows}: LoginFormProps) {
     }
     onFindFollowsFollows(yourProfile);
   }, [onFindFollowsFollows, yourProfile]);
+
   const onSearchProfiles: FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault()
     if (!handleInputRef.current) {
@@ -47,17 +49,16 @@ export function LoginForm({onFindFollowsFollows}: LoginFormProps) {
   }
 
   return <form className="flex flex-col p-2 gap-2 border w-fit" onSubmit={onSearchProfiles}>
-    <div className="flex flex-row gap-2">
-      <div className="flex flex-col gap-2 w-fit">
-        <label className="w-fit" htmlFor={id + "-handle"}>Search for Yourself: </label>
-        <input className="outline" id={id + "-handle"} type="text" ref={handleInputRef} placeholder="example.bsky.social"/>
+    <div className="flex flex-col gap-2">
+      <label className="w-fit" htmlFor={id + "-handle"}>1: Search for Yourself: </label>
+      <div className="flex flex-row gap-2 w-fit flex-nowrap">
+        <input className="outline" id={id + "-handle"} type="text" ref={handleInputRef}
+               placeholder="example.bsky.social"/>
+        <Button>Search</Button>
       </div>
     </div>
-    <div className="flex flex-row gap-2">
-      <Button>Search</Button>
-      <Button disabled={yourProfile == null} onClick={onButtonClick}>Find Follows' Follows!</Button>
-    </div>
     <div className="text-red-500">{error && `Error: ${error}`}</div>
+    <label className="w-fit">2: Select Your Profile: </label>
     <div>
       {yourProfile ? <Profile actor={yourProfile} className="border-2"/> : <ul>
         {yourProfileChoices.map(profile => <li key={profile.did}>
@@ -72,5 +73,8 @@ export function LoginForm({onFindFollowsFollows}: LoginFormProps) {
         </li>)}
       </ul>}
     </div>
+    <label className="w-fit">3: Find your Follows' Follows!</label>
+    <Button disabled={yourProfile == null} onClick={onButtonClick}>Go!</Button>
+
   </form>
 }
