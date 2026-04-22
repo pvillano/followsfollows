@@ -10,11 +10,19 @@ type SetStateFunction = (newValue: {
 
 export async function followsFollows(
   actor: string,
-  updateWeighted: SetStateFunction,
-  updateUnweighted: SetStateFunction,
-  setStatistics: (statistics: Map<string, string>) => void
+  setters: {
+    setWeighted: SetStateFunction,
+    setUnweighted: SetStateFunction,
+    setMyFollowIds: (idSet: Set<string>) => void,
+    setStatistics: (statistics: Map<string, string>) => void
+  }
 ) {
-
+  const {
+    setWeighted,
+    setUnweighted,
+    setStatistics,
+    setMyFollowIds
+  } = setters
   const followsMap = new DefaultMap<string, string[]>(() => [])
   const profileMap = new Map<string, ProfileView>()
   let lastUpdate = -2000;
@@ -23,8 +31,10 @@ export async function followsFollows(
   if (!myFollowsResponse.success) {
     throw new Error("Failed to fetch your follows")
   }
+  const myFollowsList = myFollowsResponse.data.follows.map(e => e.did)
+  followsMap.set(actor, myFollowsList)
+  setMyFollowIds(new Set(myFollowsList))
 
-  followsMap.set(actor, myFollowsResponse.data.follows.map(e => e.did))
   myFollowsResponse.data.follows.forEach(e => profileMap.set(e.did, e))
 
   const workQueue: { actor: string, work: ReturnType<typeof getFollows> }[] = myFollowsResponse.data.follows
@@ -63,13 +73,13 @@ export async function followsFollows(
         }
       }
 
-      updateUnweighted([...unWeightedFollowCount.entries()]
+      setUnweighted([...unWeightedFollowCount.entries()]
         .sort(profileSortDescending)
         .map(e => ({
           actor: profileMap.get(e[0])!,
           score: e[1]
         })))
-      updateWeighted([...weightedFollowCount.entries()]
+      setWeighted([...weightedFollowCount.entries()]
         .sort(profileSortDescending)
         .map(e => ({
           actor: profileMap.get(e[0])!,
@@ -99,7 +109,7 @@ const getAllFollows = async (actor: string) => {
     if (!success) {
       return {data, success}
     }
-    ({cursor, follows} = data as (Awaited<ReturnType<typeof getFollows>> & {success: true})['data'])
+    ({cursor, follows} = data as (Awaited<ReturnType<typeof getFollows>> & { success: true })['data'])
     allFollows.push(...follows)
     shouldLoop = !!(success && cursor)
   } while (shouldLoop)
