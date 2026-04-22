@@ -48,7 +48,7 @@ export function LoginForm({onFindFollowsFollows}: LoginFormProps) {
     <div className="flex flex-row gap-2">
       <div className="flex flex-col gap-2 w-fit">
         <label className="w-fit" htmlFor={id + "-handle"}>Search for Yourself: </label>
-        <input className="outline" id={id + "-handle"} type="text" ref={handleInputRef} placeholder="safety.bsky.app"/>
+        <input className="outline" id={id + "-handle"} type="text" ref={handleInputRef} placeholder="example.bsky.social"/>
       </div>
     </div>
     <div className="flex flex-row gap-2">
