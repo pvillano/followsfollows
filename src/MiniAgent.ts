@@ -2,11 +2,18 @@ import type {
   OutputSchema as SearchActorsOutputSchema
 } from "@atproto/api/src/client/types/app/bsky/actor/searchActors.ts";
 import type {OutputSchema as GetFollowsOutputSchema} from "@atproto/api/src/client/types/app/bsky/graph/getFollows.ts";
+import type {ProfileView} from "@atproto/api/dist/client/types/app/bsky/actor/defs";
 
 
 interface ErrorSchema {
   error: string
   message: string
+}
+
+export type MiniProfileView = Pick<ProfileView, "did" | "avatar" | "handle" | "displayName">
+
+function stripProfileView({did, avatar, handle, displayName}: ProfileView): MiniProfileView {
+  return {did, avatar, handle, displayName}
 }
 
 export async function searchActors(q: string) {
@@ -20,7 +27,7 @@ export async function searchActors(q: string) {
   }
   return {
     success: true as const,
-    data
+    data: {cursor: data.cursor, actors: data.actors.map(stripProfileView)}
   }
 }
 
@@ -38,6 +45,6 @@ export async function getFollows(actor: string, cursor?: string) {
     }
   }return {
     success: true as const,
-    data
+    data: {cursor: data.cursor, follows: data.follows.map(stripProfileView)}
   }
 }

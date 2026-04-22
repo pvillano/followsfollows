@@ -1,13 +1,13 @@
 import {LoginForm} from "./LoginForm.tsx";
-import type {ProfileView} from "@atproto/api/dist/client/types/app/bsky/actor/defs";
 import {followsFollows} from "./followsFollows.ts";
 import {useMemo, useState} from "react";
 import {Profile} from "./Profile.tsx";
 import {Button} from "./components/Button.tsx";
 import {CheckboxToggle} from "./components/Checkbox.tsx";
+import type {MiniProfileView} from "./MiniAgent.ts";
 
 function ProfileList({profiles, myFollowIds}: {
-  profiles: { actor: ProfileView, score: number }[],
+  profiles: { actor: MiniProfileView, score: number }[],
   myFollowIds: Set<string>
 }) {
   const [count, setCount] = useState(10)
@@ -37,15 +37,15 @@ function ProfileList({profiles, myFollowIds}: {
 
 function App() {
 
-  const [unweighted, setUnweighted] = useState<{ actor: ProfileView, score: number }[]>([])
-  const [weighted, setWeighted] = useState<{ actor: ProfileView, score: number }[]>([])
+  const [unweighted, setUnweighted] = useState<{ actor: MiniProfileView, score: number }[]>([])
+  const [weighted, setWeighted] = useState<{ actor: MiniProfileView, score: number }[]>([])
   const [statistics, setStatistics] = useState(new Map<string, string>())
   const [showDirect, setShowDirect] = useState(true)
   const [myFollowIds, setMyFollowIds] = useState<Set<string>>(new Set())
 
   const filterSet = useMemo(() => showDirect ? new Set<string>() : myFollowIds, [myFollowIds, showDirect])
 
-  const onFindFollowsFollows = async (profile: ProfileView) => {
+  const onFindFollowsFollows = async (profile: MiniProfileView) => {
     await followsFollows(profile.did, {setWeighted, setUnweighted, setStatistics, setMyFollowIds})
   }
 

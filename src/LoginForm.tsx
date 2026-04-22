@@ -2,19 +2,18 @@ import {type FormEventHandler, type MouseEventHandler, useCallback, useId, useRe
 import {devlog} from "./lib.ts";
 import {Button} from "./components/Button.tsx";
 import {type OutputSchema} from "@atproto/api/src/client/types/app/bsky/actor/searchActors.ts";
-import type {ProfileView} from "@atproto/api/dist/client/types/app/bsky/actor/defs";
 import {Profile} from "./Profile.tsx";
-import {searchActors} from "./MiniAgent.ts";
+import {type MiniProfileView, searchActors} from "./MiniAgent.ts";
 
 interface LoginFormProps {
-  // setProfile: Dispatch<SetStateAction<ProfileView>>,
-  onFindFollowsFollows: (profile: ProfileView) => void
+  onFindFollowsFollows: (profile: MiniProfileView) => void
 }
+
 
 export function LoginForm({onFindFollowsFollows}: LoginFormProps) {
   const id = useId()
   const handleInputRef = useRef<HTMLInputElement>(null);
-  const [yourProfileChoices, setYourProfileChoices] = useState<OutputSchema["actors"]>([])
+  const [yourProfileChoices, setYourProfileChoices] = useState<MiniProfileView[]>([])
   const [yourProfile, setYourProfile] = useState<OutputSchema["actors"][0] | null>(null)
   const [error, setError] = useState("")
 

@@ -1,11 +1,11 @@
-import type {ProfileView} from "@atproto/api/dist/client/types/app/bsky/actor/defs";
 import {cn} from "./lib.ts";
 import type {ComponentProps} from "react";
+import type {MiniProfileView} from "./MiniAgent.ts";
 
 const formatter = new Intl.NumberFormat(undefined, {maximumFractionDigits: 2})
 
 export function Profile({actor, score, className, ...props}: {
-  actor: ProfileView,
+  actor: MiniProfileView,
   score?: number
 } & ComponentProps<"div">) {
   return <div

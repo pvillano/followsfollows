@@ -1,10 +1,9 @@
-import type {ProfileView} from "@atproto/api/dist/client/types/app/bsky/actor/defs";
 import {DefaultMap} from "./DefaultMap.ts";
-import {getFollows} from "./MiniAgent.ts";
+import {getFollows, type MiniProfileView} from "./MiniAgent.ts";
 
 
 type SetStateFunction = (newValue: {
-  actor: ProfileView
+  actor: MiniProfileView
   score: number
 }[]) => void
 
@@ -24,7 +23,7 @@ export async function followsFollows(
     setMyFollowIds
   } = setters
   const followsMap = new DefaultMap<string, string[]>(() => [])
-  const profileMap = new Map<string, ProfileView>()
+  const profileMap = new Map<string, MiniProfileView>()
   let lastUpdate = -2000;
 
   const myFollowsResponse = await getAllFollows(actor)
@@ -98,7 +97,7 @@ export async function followsFollows(
 }
 
 const getAllFollows = async (actor: string) => {
-  const allFollows: ProfileView[] = []
+  const allFollows: MiniProfileView[] = []
 
   let follows;
   let cursor = undefined
