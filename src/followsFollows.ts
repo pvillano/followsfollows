@@ -1,5 +1,5 @@
 import {DefaultMap} from "./DefaultMap.ts";
-import {getFollows, type MiniProfileView} from "./MiniAgent.ts";
+import {getFollows} from "./MiniAgent.ts";
 
 
 type SetStateFunction = (newValue: {
@@ -23,19 +23,20 @@ export async function followsFollows(
     setMyFollowIds
   } = setters
   const followsMap = new DefaultMap<string, string[]>(() => [])
+  const startTime = performance.now()
   let lastUpdate = -2000;
 
   const myFollowsResponse = await getAllFollows(actor)
   if (!myFollowsResponse.success) {
     throw new Error("Failed to fetch your follows")
   }
-  const myFollowsList = myFollowsResponse.data.follows.map(e => e.did)
+  const myFollowsList = myFollowsResponse.data.follows
   followsMap.set(actor, myFollowsList)
   setMyFollowIds(new Set(myFollowsList))
 
 
-  const workQueue: { actor: string, work: ReturnType<typeof getFollows> }[] = myFollowsResponse.data.follows
-    .map(e => ({actor: e.did, work: getFollows(e.did)}))
+  const workQueue: { actor: string, work: ReturnType<typeof getFollows> }[] = myFollowsList
+    .map(e => ({actor: e, work: getFollows(e)}))
 
   while (workQueue.length > 0) {
     const {actor, work} = workQueue.shift()!
@@ -49,7 +50,7 @@ export async function followsFollows(
     }
 
     if (follows.length > 0) {
-      followsMap.get(actor).push(...follows.map(e => e.did))
+      followsMap.get(actor).push(...follows.map(e => e))
     }
 
     if (performance.now() - lastUpdate > 100 || workQueue.length == 0) {
@@ -86,7 +87,8 @@ export async function followsFollows(
       setStatistics(new Map([
         ["Users Processed", `${(myFollowsResponse.data.follows.length - workQueue.length)}/${myFollowsResponse.data.follows.length}`],
         ["Total Follows", `${totalFollows}`],
-        ["Average Follows per User", `${formatter.format(averageFollowsCount)}`]
+        ["Average Follows per User", `${formatter.format(averageFollowsCount)}`],
+        ["Seconds Elapsed", `${(performance.now() - startTime)/1000}`]
       ]))
       lastUpdate = performance.now()
     }
@@ -94,7 +96,7 @@ export async function followsFollows(
 }
 
 const getAllFollows = async (actor: string) => {
-  const allFollows: MiniProfileView[] = []
+  const allFollows: string[] = []
 
   let follows;
   let cursor = undefined
