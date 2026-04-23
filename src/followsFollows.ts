@@ -114,7 +114,7 @@ export async function followsFollows(
       workQueue.push({actor, work: getFollows(actor, cursor)})
     } else {
       if (!globalFollowsMap.has(actor)) {
-        globalFollowsMap.set(actor, follows)
+        globalFollowsMap.set(actor, followsMap.get(actor))
       }
     }
 
