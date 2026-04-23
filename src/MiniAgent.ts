@@ -16,9 +16,13 @@ type SuccessPromise<S> = Promise<{
   data: S
 }>
 
+type ProfileMap = Map<"did" | "avatar" | "handle" | "displayName", string>
+
+export const globalUserLookup = new Map<string, ProfileMap>()
+
 export type MiniProfileView = Pick<ProfileView, "did" | "avatar" | "handle" | "displayName">
 
-export async function searchActors(q: string): SuccessPromise<{cursor: string, actors: MiniProfileView[]}> {
+export async function searchActors(q: string): SuccessPromise<{cursor: string, actors: string[]}> {
 
   const response = await fetch(`https://api.bsky.app/xrpc/app.bsky.actor.searchActors?q=${q}`)
   const body = response.body
@@ -27,18 +31,16 @@ export async function searchActors(q: string): SuccessPromise<{cursor: string, a
   }
 
   const jsonParser = new JSONParser({
-    paths: ['$.error.*','$.message.*', '$.cursor', "$.actors.*.did", "$.actors.*.avatar", "$.actors.*.handle", "$.actors.*.displayName"],
+    paths: ['$.error.*','$.message.*', '$.cursor', "$.actors.*.did", "$.actors.*.handle", "$.actors.*.displayName", "$.actors.*.avatar",],
     keepStack: false
   })
 
   const reader = body.pipeThrough(jsonParser).getReader();
 
-  const otherKeys = {
-    error: undefined as string | undefined,
-    message: undefined as string | undefined,
-    cursor: undefined as string | undefined,
-  }
-  const actors: Partial<MiniProfileView>[] = []
+  const otherKeys = new Map<"error" | "message" | "cursor", string>()
+  const actors: string[] = []
+  let currentDid: string | undefined;
+  let userInProgress: ProfileMap | undefined = undefined
   while(true) {
     const { done, value: parsedElementInfo } = await reader.read();
     if(done){
@@ -46,28 +48,49 @@ export async function searchActors(q: string): SuccessPromise<{cursor: string, a
     }
     const { value, key, stack } = parsedElementInfo
     if(stack.length < 2){
-      otherKeys[key as keyof typeof otherKeys] = value as string
+      otherKeys.set(key as never, value as string)
       continue
     }
-    const index = stack[2].key as number;
-    if (index >= actors.length){
-      actors.push({})
+    //did is always the first key
+    if(key == "did"){
+      if(userInProgress){
+        console.assert(currentDid !== undefined)
+        globalUserLookup.set(currentDid!, userInProgress)
+        userInProgress = undefined
+      }
+
+      currentDid = value as string
+      actors.push(value as string)
+      const index = stack[2].key as number;
+      console.assert(index == actors.length - 1, index, actors.length)
+      //assert values has the right length
+      if(globalUserLookup.has(currentDid)){
+        userInProgress = undefined
+      } else {
+        userInProgress = new Map([["did", currentDid]])
+      }
+    } else if (userInProgress){
+      userInProgress.set(key as never, value as string)
     }
-    actors[index][key as keyof MiniProfileView] = value as string | undefined;
+  }
+  if(userInProgress){
+    console.assert(currentDid !== undefined)
+    globalUserLookup.set(currentDid!, userInProgress)
+    userInProgress = undefined
   }
 
   devlog(actors)
   devlog(otherKeys)
 
-  if(otherKeys.error){
+  if(otherKeys.has("error")){
     return {
       success: false as const,
-      data: {error: otherKeys.error, message: otherKeys.message!}
+      data: {error: otherKeys.get("error")!, message: otherKeys.get("message")!}
     }
   }
   return {
     success: true as const,
-    data: {cursor: otherKeys.cursor!, actors: actors as MiniProfileView[]}
+    data: {cursor: otherKeys.get("cursor")!, actors}
   }
 }
 

@@ -3,7 +3,7 @@ import {getFollows, type MiniProfileView} from "./MiniAgent.ts";
 
 
 type SetStateFunction = (newValue: {
-  actor: MiniProfileView
+  actor: string
   score: number
 }[]) => void
 
@@ -23,7 +23,6 @@ export async function followsFollows(
     setMyFollowIds
   } = setters
   const followsMap = new DefaultMap<string, string[]>(() => [])
-  const profileMap = new Map<string, MiniProfileView>()
   let lastUpdate = -2000;
 
   const myFollowsResponse = await getAllFollows(actor)
@@ -34,7 +33,6 @@ export async function followsFollows(
   followsMap.set(actor, myFollowsList)
   setMyFollowIds(new Set(myFollowsList))
 
-  myFollowsResponse.data.follows.forEach(e => profileMap.set(e.did, e))
 
   const workQueue: { actor: string, work: ReturnType<typeof getFollows> }[] = myFollowsResponse.data.follows
     .map(e => ({actor: e.did, work: getFollows(e.did)}))
@@ -53,7 +51,6 @@ export async function followsFollows(
     if (follows.length > 0) {
       followsMap.get(actor).push(...follows.map(e => e.did))
     }
-    follows.forEach(e => profileMap.set(e.did, e))
 
     if (performance.now() - lastUpdate > 100 || workQueue.length == 0) {
       let totalFollows = 0;
@@ -75,13 +72,13 @@ export async function followsFollows(
       setUnweighted([...unWeightedFollowCount.entries()]
         .sort(profileSortDescending)
         .map(e => ({
-          actor: profileMap.get(e[0])!,
+          actor: e[0],
           score: e[1]
         })))
       setWeighted([...weightedFollowCount.entries()]
         .sort(profileSortDescending)
         .map(e => ({
-          actor: profileMap.get(e[0])!,
+          actor: e[0],
           score: e[1]
         })))
       const formatter = new Intl.NumberFormat(undefined, {maximumFractionDigits: 2})

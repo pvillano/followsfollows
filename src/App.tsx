@@ -4,10 +4,10 @@ import {useMemo, useState} from "react";
 import {Profile} from "./Profile.tsx";
 import {Button} from "./components/Button.tsx";
 import {CheckboxToggle} from "./components/Checkbox.tsx";
-import type {MiniProfileView} from "./MiniAgent.ts";
+import {globalUserLookup} from "./MiniAgent.ts";
 
 function ProfileList({profiles, myFollowIds}: {
-  profiles: { actor: MiniProfileView, score: number }[],
+  profiles: { actor: string, score: number }[],
   myFollowIds: Set<string>
 }) {
   const [count, setCount] = useState(10)
@@ -21,12 +21,14 @@ function ProfileList({profiles, myFollowIds}: {
   //   , [count, myFollowIds, profiles])
   return <div>
     <ul>
-      {profiles.filter(e => !myFollowIds.has(e.actor.did)).slice(0, count).map(e =>
-        <li key={e.actor.did} /*hidden={myFollowIds.has(e.actor.did)}*/>
-        <a href={`https://bsky.app/profile/${e.actor.handle}`} target="_blank" rel="noreferrer">
-          <Profile  {...e}/>
-        </a>
-      </li>)}
+      {profiles.filter(e => !myFollowIds.has(e.actor)).slice(0, count).map(e => {
+        const actor = globalUserLookup.get(e.actor)!
+        return <li key={e.actor} /*hidden={myFollowIds.has(e.actor.did)}*/>
+          <a href={`https://bsky.app/profile/${actor.get("handle")}`} target="_blank" rel="noreferrer">
+            <Profile  {...e}/>
+          </a>
+        </li>;
+      })}
     </ul>
     <Button className={"mx-2"}
             onClick={() => setCount(count + 10)}
@@ -37,16 +39,16 @@ function ProfileList({profiles, myFollowIds}: {
 
 function App() {
 
-  const [unweighted, setUnweighted] = useState<{ actor: MiniProfileView, score: number }[]>([])
-  const [weighted, setWeighted] = useState<{ actor: MiniProfileView, score: number }[]>([])
+  const [unweighted, setUnweighted] = useState<{ actor: string, score: number }[]>([])
+  const [weighted, setWeighted] = useState<{ actor: string, score: number }[]>([])
   const [statistics, setStatistics] = useState(new Map<string, string>())
   const [showDirect, setShowDirect] = useState(true)
   const [myFollowIds, setMyFollowIds] = useState<Set<string>>(new Set())
 
   const filterSet = useMemo(() => showDirect ? new Set<string>() : myFollowIds, [myFollowIds, showDirect])
 
-  const onFindFollowsFollows = async (profile: MiniProfileView) => {
-    await followsFollows(profile.did, {setWeighted, setUnweighted, setStatistics, setMyFollowIds})
+  const onFindFollowsFollows = async (did: string) => {
+    await followsFollows(did, {setWeighted, setUnweighted, setStatistics, setMyFollowIds})
   }
 
   return (

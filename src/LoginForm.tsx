@@ -1,20 +1,19 @@
 import {type FormEventHandler, type MouseEventHandler, useCallback, useId, useRef, useState} from "react";
 import {devlog} from "./lib.ts";
 import {Button} from "./components/Button.tsx";
-import {type OutputSchema} from "@atproto/api/src/client/types/app/bsky/actor/searchActors.ts";
 import {Profile} from "./Profile.tsx";
-import {type MiniProfileView, searchActors} from "./MiniAgent.ts";
+import {globalUserLookup, searchActors} from "./MiniAgent.ts";
 
 interface LoginFormProps {
-  onFindFollowsFollows: (profile: MiniProfileView) => void
+  onFindFollowsFollows: (profile: string) => void
 }
 
 
 export function LoginForm({onFindFollowsFollows}: LoginFormProps) {
   const id = useId()
   const handleInputRef = useRef<HTMLInputElement>(null);
-  const [yourProfileChoices, setYourProfileChoices] = useState<MiniProfileView[]>([])
-  const [yourProfile, setYourProfile] = useState<OutputSchema["actors"][0] | null>(null)
+  const [yourProfileChoices, setYourProfileChoices] = useState<string[]>([])
+  const [yourProfile, setYourProfile] = useState<string | null>(null)
   const [error, setError] = useState("")
 
   const onButtonClick: MouseEventHandler<HTMLButtonElement> = useCallback((e) => {
@@ -60,16 +59,19 @@ export function LoginForm({onFindFollowsFollows}: LoginFormProps) {
     <label className="w-fit">2: Select Your Profile: </label>
     <div>
       {yourProfile ? <Profile actor={yourProfile} className="border-2"/> : <ul>
-        {yourProfileChoices.map(profile => <li key={profile.did}>
-          <button
-            className="flex flex-row border m-2 p-2 gap-4 content-end"
-            onClick={() => {
-              setYourProfile(profile)
-            }}>
-            <img src={profile.avatar} className="w-10 h-10 rounded-full" alt={`avatar for ${profile.handle}`}/>
-            <div>{profile.handle}</div>
-          </button>
-        </li>)}
+        {yourProfileChoices.map(did => {
+          const profile = globalUserLookup.get(did)!
+          return <li key={did}>
+            <button
+              className="flex flex-row border m-2 p-2 gap-4 content-end"
+              onClick={() => {
+                setYourProfile(did)
+              }}>
+              <img src={profile.get("avatar")} className="w-10 h-10 rounded-full" alt={`avatar for ${profile.get("handle")}`}/>
+              <div>{profile.get("handle")}</div>
+            </button>
+          </li>;
+        })}
       </ul>}
     </div>
     <label className="w-fit">3: Find your Follows' Follows!</label>
