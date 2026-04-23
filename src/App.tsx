@@ -5,23 +5,17 @@ import {Profile} from "./Profile.tsx";
 import {Button} from "./components/Button.tsx";
 import {CheckboxToggle} from "./components/Checkbox.tsx";
 import {globalUserLookup} from "./MiniAgent.ts";
+import {H2} from "./components/Heading.tsx";
 
 function ProfileList({profiles, myFollowIds}: {
   profiles: { actor: string, score: number }[],
   myFollowIds: Set<string>
 }) {
   const [count, setCount] = useState(10)
-  // const realCount = useMemo(() => {
-  //     const maybeLast = profiles.ite
-  //       .map((v, i) => [v.actor.did, i] as const)
-  //       .filter(([v]) => myFollowIds.has(v))
-  //       .at(count);
-  //     return maybeLast ? maybeLast[1] : profiles.length;
-  //   }
-  //   , [count, myFollowIds, profiles])
+  const filtered = useMemo(() => profiles.filter(e => !myFollowIds.has(e.actor)).slice(0, count), [count, myFollowIds, profiles])
   return <div>
     <ul>
-      {profiles.filter(e => !myFollowIds.has(e.actor)).slice(0, count).map(e => {
+      {filtered.map(e => {
         const actor = globalUserLookup.get(e.actor)!
         return <li key={e.actor} /*hidden={myFollowIds.has(e.actor.did)}*/>
           <a href={`https://bsky.app/profile/${actor.get("handle")}`} target="_blank" rel="noreferrer">
@@ -41,7 +35,7 @@ function App() {
 
   const [unweighted, setUnweighted] = useState<{ actor: string, score: number }[]>([])
   const [weighted, setWeighted] = useState<{ actor: string, score: number }[]>([])
-  const [statistics, setStatistics] = useState(new Map<string, string>())
+  const [statistics, setStatistics] = useState<[string, string][]>([])
   const [showDirect, setShowDirect] = useState(true)
   const [myFollowIds, setMyFollowIds] = useState<Set<string>>(new Set())
 
@@ -58,16 +52,16 @@ function App() {
           <LoginForm onFindFollowsFollows={onFindFollowsFollows}/>
           <div className="flex flex-col border p-2">
             <div className="flex-1">
-              <h2>Options:</h2>
+              <H2>Option:</H2>
               <div className="flex flex-row gap-0.5">
                 <CheckboxToggle checked={showDirect} onChange={(e) => setShowDirect(e.target.checked)}/>
-                <label>Show your follows</label>
+                <label>Show accounts you already follow</label>
               </div>
             </div>
             <div className="flex-1">
-              <h2>Statistics:</h2>
+              <H2>Statistics:</H2>
               <ul>
-                {[...statistics.entries()].map(([k, v]) => <li key={k}>{k}: {v}</li>)}
+                {statistics.map(([k, v]) => <li key={k}>{k}: {v}</li>)}
               </ul>
             </div>
           </div>

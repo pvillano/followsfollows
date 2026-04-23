@@ -13,7 +13,7 @@ export async function followsFollows(
     setWeighted: SetStateFunction,
     setUnweighted: SetStateFunction,
     setMyFollowIds: (idSet: Set<string>) => void,
-    setStatistics: (statistics: Map<string, string>) => void
+    setStatistics: (statistics: [string, string][]) => void
   }
 ) {
   const {
@@ -50,7 +50,7 @@ export async function followsFollows(
     }
 
     if (follows.length > 0) {
-      followsMap.get(actor).push(...follows.map(e => e))
+      followsMap.get(actor).push(...follows)
     }
 
     if (performance.now() - lastUpdate > 100 || workQueue.length == 0) {
@@ -84,13 +84,13 @@ export async function followsFollows(
         })))
       const formatter = new Intl.NumberFormat(undefined, {maximumFractionDigits: 2})
       // devlog([...followsMap.entries()])
-      setStatistics(new Map([
+      setStatistics([
         ["Users Processed", `${(myFollowsResponse.data.follows.length - workQueue.length)}/${myFollowsResponse.data.follows.length}`],
         ["Total Follows", `${totalFollows}`],
         ["Average Follows per User", `${formatter.format(averageFollowsCount)}`],
         ["Unique Users", `${globalUserLookup.size}`],
         ["Seconds Elapsed", `${(performance.now() - startTime)/1000}`]
-      ]))
+      ])
       lastUpdate = performance.now()
     }
   }

@@ -1,5 +1,5 @@
 import {type FormEventHandler, type MouseEventHandler, useCallback, useId, useRef, useState} from "react";
-import {devlog} from "./lib.ts";
+import {cn, devlog} from "./lib.ts";
 import {Button} from "./components/Button.tsx";
 import {Profile} from "./Profile.tsx";
 import {globalUserLookup, searchActors} from "./MiniAgent.ts";
@@ -56,7 +56,7 @@ export function LoginForm({onFindFollowsFollows}: LoginFormProps) {
       </div>
     </div>
     <div className="text-red-500">{error && `Error: ${error}`}</div>
-    <label className="w-fit">2: Select Your Profile: </label>
+    <label className={cn("w-fit", yourProfileChoices.length == 0 && "text-gray-500")}>2: Select Your Profile: </label>
     <div>
       {yourProfile ? <Profile actor={yourProfile} className="border-2"/> : <ul>
         {yourProfileChoices.map(did => {
