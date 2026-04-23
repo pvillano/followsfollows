@@ -3,13 +3,15 @@ import {cn, devlog} from "./lib.ts";
 import {Button} from "./components/Button.tsx";
 import {Profile} from "./Profile.tsx";
 import {globalUserLookup, searchActors} from "./MiniAgent.ts";
+import {stopFollowsFollowsFollows} from "./followsFollows.ts";
 
 interface LoginFormProps {
   onFindFollowsFollows: (profile: string) => void
+  running?: boolean
 }
 
 
-export function LoginForm({onFindFollowsFollows}: LoginFormProps) {
+export function LoginForm({onFindFollowsFollows, running}: LoginFormProps) {
   const id = useId()
   const handleInputRef = useRef<HTMLInputElement>(null);
   const [yourProfileChoices, setYourProfileChoices] = useState<string[]>([])
@@ -75,7 +77,10 @@ export function LoginForm({onFindFollowsFollows}: LoginFormProps) {
       </ul>}
     </div>
     <label className="w-fit">3: Find your Follows' Follows!</label>
-    <Button disabled={yourProfile == null} onClick={onButtonClick}>Go!</Button>
+    <div className="flex flex-row gap-5">
+      <Button disabled={yourProfile == null} onClick={onButtonClick}>Go!</Button>
+      <Button disabled={!running} onClick={e => {e.preventDefault(); stopFollowsFollowsFollows()}}>Stop!</Button>
+    </div>
 
   </form>
 }

@@ -7,23 +7,32 @@ type SetStateFunction = (newValue: {
   score: number
 }[]) => void
 
+let lock = 0
+
+export function stopFollowsFollowsFollows(): void {
+  lock = performance.now() // everything started in the past stops
+}
+
 export async function followsFollows(
   actor: string,
   setters: {
     setWeighted: SetStateFunction,
     setUnweighted: SetStateFunction,
     setMyFollowIds: (idSet: Set<string>) => void,
-    setStatistics: (statistics: [string, string][]) => void
+    setStatistics: (statistics: [string, string][]) => void,
+    setRunning: (running: boolean) => void
   }
 ) {
   const {
     setWeighted,
     setUnweighted,
     setStatistics,
-    setMyFollowIds
+    setMyFollowIds,
+    setRunning
   } = setters
   const followsMap = new DefaultMap<string, string[]>(() => [])
   const startTime = performance.now()
+  lock = Math.max(lock, startTime) // most recent wins
   let lastUpdate = -2000;
 
   const myFollowsResponse = await getAllFollows(actor)
@@ -38,7 +47,8 @@ export async function followsFollows(
   const workQueue: { actor: string, work: ReturnType<typeof getFollows> }[] = myFollowsList
     .map(e => ({actor: e, work: getFollows(e)}))
 
-  while (workQueue.length > 0) {
+  while (workQueue.length > 0 && lock == startTime) {
+    setRunning(true)
     const {actor, work} = workQueue.shift()!
     const {data, success} = await work
     if (!success) {
@@ -94,6 +104,7 @@ export async function followsFollows(
       lastUpdate = performance.now()
     }
   }
+  setRunning(false)
 }
 
 const getAllFollows = async (actor: string) => {
