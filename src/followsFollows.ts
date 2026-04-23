@@ -1,5 +1,5 @@
 import {DefaultMap} from "./DefaultMap.ts";
-import {getFollows} from "./MiniAgent.ts";
+import {getFollows, globalUserLookup} from "./MiniAgent.ts";
 
 
 type SetStateFunction = (newValue: {
@@ -88,6 +88,7 @@ export async function followsFollows(
         ["Users Processed", `${(myFollowsResponse.data.follows.length - workQueue.length)}/${myFollowsResponse.data.follows.length}`],
         ["Total Follows", `${totalFollows}`],
         ["Average Follows per User", `${formatter.format(averageFollowsCount)}`],
+        ["Unique Users", `${globalUserLookup.size}`],
         ["Seconds Elapsed", `${(performance.now() - startTime)/1000}`]
       ]))
       lastUpdate = performance.now()
