@@ -18,15 +18,13 @@ const globalFollowsMap = new Map<string, string[]>()
 export async function followsFollows(
   actor: string,
   setters: {
-    setWeighted: SetStateFunction,
     setUnweighted: SetStateFunction,
-    setMyFollowIds: (idSet: Set<string>) => void,
+    setMyFollowIds: (ids: string[]) => void,
     setStatistics: (statistics: [string, string][]) => void,
     setRunning: (running: boolean) => void
   }
 ) {
   const {
-    setWeighted,
     setUnweighted,
     setStatistics,
     setMyFollowIds,
@@ -49,7 +47,7 @@ export async function followsFollows(
   }
 
   followsMap.set(actor, myFollowsList)
-  setMyFollowIds(new Set(myFollowsList))
+  setMyFollowIds(myFollowsList)
 
   const workQueue: { actor: string, work: ReturnType<typeof getFollows> }[] = myFollowsList
     .filter(e => {
@@ -70,19 +68,13 @@ export async function followsFollows(
     const averageFollowsCount = totalFollows / followsMap.size
 
     const unWeightedFollowCount = new DefaultMap<string, number>(() => 0)
-    const weightedFollowCount = new DefaultMap<string, number>(() => 0)
     for (const [, follows] of followsMap.entries()) {
-      const multiplier = averageFollowsCount / follows.length
       for (const follow of follows) {
         unWeightedFollowCount.set(follow, unWeightedFollowCount.get(follow) + 1)
-        weightedFollowCount.set(follow, weightedFollowCount.get(follow) + multiplier)
       }
     }
 
     setUnweighted([...unWeightedFollowCount.entries()]
-      .sort(profileSortDescending)
-      .map(e => ({actor: e[0], score: e[1]})))
-    setWeighted([...weightedFollowCount.entries()]
       .sort(profileSortDescending)
       .map(e => ({actor: e[0], score: e[1]})))
     const formatter = new Intl.NumberFormat(undefined, {maximumFractionDigits: 2})

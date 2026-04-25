@@ -1,4 +1,3 @@
-import type {ProfileView} from "@atproto/api/dist/client/types/app/bsky/actor/defs";
 import {JSONParser} from "@streamparser/json-whatwg";
 import {devlog} from "./lib.ts";
 
@@ -19,8 +18,6 @@ type SuccessPromise<S> = Promise<{
 type ProfileMap = Map<"did" | "avatar" | "handle" | "displayName", string>
 
 export const globalUserLookup = new Map<string, ProfileMap>()
-
-export type MiniProfileView = Pick<ProfileView, "did" | "avatar" | "handle" | "displayName">
 
 export async function searchActors(q: string): SuccessPromise<{cursor: string, actors: string[]}> {
 

@@ -8,16 +8,16 @@ import {ProfileList} from "./ProfileList.tsx";
 function App() {
 
   const [unweighted, setUnweighted] = useState<{ actor: string, score: number }[]>([])
-  const [weighted, setWeighted] = useState<{ actor: string, score: number }[]>([])
   const [statistics, setStatistics] = useState<[string, string][]>([])
   const [showDirect, setShowDirect] = useState(true)
-  const [myFollowIds, setMyFollowIds] = useState<Set<string>>(new Set())
+  const [myFollowIds, setMyFollowIds] = useState<string[]>([])
   const [running, setRunning] = useState(false)
 
-  const filterSet = useMemo(() => showDirect ? new Set<string>() : myFollowIds, [myFollowIds, showDirect])
+  const followIdsSet = useMemo(() => new Set(myFollowIds), [myFollowIds])
+  const followsRanked = useMemo(() => myFollowIds.map((e) => ({actor: e})), [myFollowIds])
 
   const onFindFollowsFollows = async (did: string) => {
-    await followsFollows(did, {setWeighted, setUnweighted, setStatistics, setMyFollowIds, setRunning})
+    await followsFollows(did, {setUnweighted, setStatistics, setMyFollowIds, setRunning})
   }
 
   return (
@@ -43,12 +43,12 @@ function App() {
         </div>
         <div className="flex flex-row gap-2 w-0 min-w-fit">
           <div className="flex flex-col p-2 gap-2 border w-fit">
-            <h2>Your follows' follows, by weighted score:</h2>
-            <ProfileList profiles={weighted} myFollowIds={filterSet}/>
+            <h2>Your follows:</h2>
+            <ProfileList profiles={followsRanked} myFollowIds={followIdsSet} showDirect={true}/>
           </div>
           <div className="flex flex-col p-2 gap-2 border w-fit">
-            <h2>Your follows' follows, by follow follows:</h2>
-            <ProfileList profiles={unweighted} myFollowIds={filterSet}/>
+            <h2>Your follows' follows:</h2>
+            <ProfileList profiles={unweighted} myFollowIds={followIdsSet} showDirect={showDirect}/>
           </div>
         </div>
       </div>
