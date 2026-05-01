@@ -12,11 +12,15 @@ function App() {
   const [showDirect, setShowDirect] = useState(true)
   const [myFollowIds, setMyFollowIds] = useState<string[]>([])
   const [running, setRunning] = useState(false)
+  const [myFollowsCount, setMyFollowsCount] = useState(10)
+  const [followsFollowsCount, setFollowsFollowsCount] = useState(10)
 
   const followIdsSet = useMemo(() => new Set(myFollowIds), [myFollowIds])
   const followsRanked = useMemo(() => myFollowIds.map((e) => ({actor: e})), [myFollowIds])
 
   const onFindFollowsFollows = async (did: string) => {
+    setMyFollowsCount(10)
+    setFollowsFollowsCount(10)
     await followsFollows(did, {setUnweighted, setStatistics, setMyFollowIds, setRunning})
   }
 
@@ -44,11 +48,23 @@ function App() {
         <div className="flex flex-row gap-2 min-w-fit flex-wrap w-full">
           <div className="flex flex-col p-2 gap-2 border min-w-fit grow">
             <h2>Your follows:</h2>
-            <ProfileList profiles={followsRanked} myFollowIds={followIdsSet} showDirect={true}/>
+            <ProfileList
+              profiles={followsRanked}
+              myFollowIds={followIdsSet}
+              showDirect={true}
+              count={myFollowsCount}
+              setCount={setMyFollowsCount}
+            />
           </div>
           <div className="flex flex-col p-2 gap-2 border min-w-fit grow">
             <h2>Your follows' follows:</h2>
-            <ProfileList profiles={unweighted} myFollowIds={followIdsSet} showDirect={showDirect}/>
+            <ProfileList
+              profiles={unweighted}
+              myFollowIds={followIdsSet}
+              showDirect={showDirect}
+              count={followsFollowsCount}
+              setCount={setFollowsFollowsCount}
+            />
           </div>
         </div>
       </div>
