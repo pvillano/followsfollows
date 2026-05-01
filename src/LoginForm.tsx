@@ -76,7 +76,7 @@ export function LoginForm({onFindFollowsFollows, running}: LoginFormProps) {
         })}
       </ul>}
     </div>
-    <label className="w-fit">3: Find your Follows' Follows!</label>
+    <label className={cn("w-fit", !yourProfile && "text-gray-500")}>3: Find your Follows' Follows!</label>
     <div className="flex flex-row gap-5">
       <Button disabled={yourProfile == null} onClick={onButtonClick}>Go!</Button>
       <Button disabled={!running} onClick={e => {e.preventDefault(); stopFollowsFollowsFollows()}}>Stop!</Button>
