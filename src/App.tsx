@@ -23,9 +23,9 @@ function App() {
   return (
     <>
       <div className="flex flex-col m-4 gap-2">
-        <div className="flex flex-row gap-2">
+        <div className="flex flex-row gap-2 flex-wrap w-full">
           <LoginForm onFindFollowsFollows={onFindFollowsFollows} running={running}/>
-          <div className="flex flex-col border p-2">
+          <div className="flex flex-col border p-2 grow">
             <div className="flex-1">
               <H2>Option:</H2>
               <div className="flex flex-row gap-0.5">
@@ -41,12 +41,12 @@ function App() {
             </div>
           </div>
         </div>
-        <div className="flex flex-row gap-2 w-0 min-w-fit">
-          <div className="flex flex-col p-2 gap-2 border w-fit">
+        <div className="flex flex-row gap-2 min-w-fit flex-wrap w-full">
+          <div className="flex flex-col p-2 gap-2 border min-w-fit grow">
             <h2>Your follows:</h2>
             <ProfileList profiles={followsRanked} myFollowIds={followIdsSet} showDirect={true}/>
           </div>
-          <div className="flex flex-col p-2 gap-2 border w-fit">
+          <div className="flex flex-col p-2 gap-2 border min-w-fit grow">
             <h2>Your follows' follows:</h2>
             <ProfileList profiles={unweighted} myFollowIds={followIdsSet} showDirect={showDirect}/>
           </div>

@@ -48,7 +48,7 @@ export function LoginForm({onFindFollowsFollows, running}: LoginFormProps) {
     }
   }
 
-  return <form className="flex flex-col p-2 gap-2 border w-fit" onSubmit={onSearchProfiles}>
+  return <form className="flex flex-col p-2 gap-2 border grow" onSubmit={onSearchProfiles}>
     <div className="flex flex-col gap-2">
       <label className="w-fit" htmlFor={id + "-handle"}>1: Search for Yourself: </label>
       <div className="flex flex-row gap-2 w-fit flex-nowrap">
